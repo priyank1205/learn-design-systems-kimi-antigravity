@@ -116,7 +116,7 @@ export default function AITutor() {
                   fontSize: '0.9rem',
                   lineHeight: '1.5'
                 }}>
-                  {m.role === 'user' ? m.content : <div style={{ prose: 'true' }}><ReactMarkdown>{m.content}</ReactMarkdown></div>}
+                  {m.role === 'user' ? m.content : <div className="prose"><ReactMarkdown>{m.content}</ReactMarkdown></div>}
                 </div>
               </div>
             ))}

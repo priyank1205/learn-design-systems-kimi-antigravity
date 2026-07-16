@@ -4,8 +4,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { LEVELS } from '@/lib/levels';
 import { useGameStore } from '@/lib/store';
 import { useState, useEffect } from 'react';
-import { CheckCircle2, Lock, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, Lock, ArrowLeft, Book, FileText, Video, ExternalLink, Quote } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import rehypeRaw from 'rehype-raw';
 import Link from 'next/link';
 import QuizEngine, { Question } from '@/components/QuizEngine';
 import BossChecker from '@/components/BossChecker';
@@ -22,6 +23,31 @@ const DUMMY_QUESTIONS: Question[] = [
     correctIndex: 2
   }
 ];
+
+const renderers = {
+  h2: ({node, ...props}: any) => {
+    const text = props.children?.[0] as string;
+    if (typeof text === 'string') {
+      const parts = text.split(' ');
+      if (parts[0].match(/^\d+$/)) {
+        return (
+          <h2 style={{ fontSize: '1.5rem', marginTop: '3rem', marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <span style={{ color: 'var(--accent-warning)', fontWeight: 700 }}>{parts[0]}</span>
+            <span>{parts.slice(1).join(' ')}</span>
+          </h2>
+        );
+      }
+    }
+    return <h2 style={{ fontSize: '1.5rem', marginTop: '3rem', marginBottom: '1.5rem' }} {...props} />;
+  },
+  blockquote: ({node, ...props}: any) => (
+    <div style={{ padding: '1.5rem', background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.2)', borderRadius: 'var(--radius-md)', margin: '2rem 0', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+      <Quote size={24} style={{ color: 'var(--accent-warning)', flexShrink: 0, marginTop: '0.1rem' }} />
+      <div style={{ color: 'rgba(255, 255, 255, 0.9)', fontStyle: 'italic', lineHeight: 1.6 }}>{props.children}</div>
+    </div>
+  ),
+  p: ({node, ...props}: any) => <p style={{ marginBottom: '1.5rem', color: 'rgba(255, 255, 255, 0.8)' }} {...props} />
+};
 
 // Dummy theory content for MVP - in reality this would be loaded from .md files
 const DUMMY_THEORY = `
@@ -68,8 +94,8 @@ export default function LevelPage() {
   }
 
   const handleFinishReading = () => {
-    if (!completedNodes[\`\${level.id}-theory\`]) {
-      useGameStore.getState().markNodeCompleted(\`\${level.id}-theory\`);
+    if (!completedNodes[`${level.id}-theory`]) {
+      useGameStore.getState().markNodeCompleted(`${level.id}-theory`);
       addXp(10);
       setActiveTab('practice');
     }
@@ -105,8 +131,8 @@ export default function LevelPage() {
               gap: '0.5rem'
             }}
           >
-            {tab}
-            {completedNodes[\`\${level.id}-\${tab === 'learn' ? 'theory' : tab}\`] && (
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {completedNodes[`${level.id}-${tab === 'learn' ? 'theory' : tab}`] && (
               <CheckCircle2 size={16} color="var(--accent-success)" />
             )}
           </button>
@@ -117,16 +143,44 @@ export default function LevelPage() {
       <div className="glass-panel" style={{ padding: '2rem' }}>
         {activeTab === 'learn' && (
           <div className="animate-fade-in">
-            <div style={{ prose: 'true', lineHeight: '1.7' }}>
-              <ReactMarkdown>{DUMMY_THEORY}</ReactMarkdown>
+            <div className="prose" style={{ lineHeight: '1.7' }}>
+              <ReactMarkdown 
+                rehypePlugins={[rehypeRaw]}
+                components={renderers}
+              >
+                {level.theoryMarkdown || ''}
+              </ReactMarkdown>
             </div>
-            {!completedNodes[\`\${level.id}-theory\`] && (
-              <div style={{ marginTop: '3rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-                <button onClick={handleFinishReading} className="primary-btn">
-                  Finish Reading (+10 XP)
-                </button>
+            
+            {level.resources && level.resources.length > 0 && (
+              <div style={{ marginTop: '4rem' }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>Go deeper</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {level.resources.map((res, i) => (
+                    <a key={i} href={res.url} target="_blank" rel="noopener noreferrer" className="resource-card">
+                      <div className="resource-card-header">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          {res.icon === 'video' ? <Video size={18} /> : res.icon === 'article' ? <FileText size={18} /> : <Book size={18} />}
+                          <span>{res.title}</span>
+                        </div>
+                        <ExternalLink size={16} style={{ color: 'var(--text-tertiary)' }} />
+                      </div>
+                      <div className="resource-card-desc" style={{ paddingLeft: 'calc(18px + 0.75rem)' }}>
+                        {res.description}
+                      </div>
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
+
+            <div style={{ marginTop: '4rem', display: 'flex', justifyContent: 'center' }}>
+              {!completedNodes[`${level.id}-theory`] && (
+                <button onClick={handleFinishReading} className="primary-btn hover-effect">
+                  Finish Reading (+10 XP)
+                </button>
+              )}
+            </div>
           </div>
         )}
 
