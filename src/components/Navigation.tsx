@@ -38,9 +38,24 @@ export default function Navigation() {
             </div>
 
             <Link href="/profile">
-              <div className="btn btn-secondary">
-                <Trophy size={16} />
-                <span>{getRank()}</span>
+              <div 
+                className="btn btn-secondary flex items-center gap-2 group border transition-all duration-300"
+                style={{ 
+                  borderRadius: '999px',
+                  paddingLeft: '0.35rem', 
+                  paddingRight: '1rem',
+                  borderColor: 'rgba(255,255,255,0.1)'
+                }}
+              >
+                <div 
+                  className="rounded-full flex items-center justify-center transition-all duration-300 flex-shrink-0"
+                  style={{ width: '28px', height: '28px', background: 'rgba(129, 140, 248, 0.15)', border: '1px solid rgba(129, 140, 248, 0.3)' }}
+                >
+                  <Trophy size={14} className="text-accent" />
+                </div>
+                <span className="font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                  Priyank
+                </span>
               </div>
             </Link>
           </>

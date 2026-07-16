@@ -84,9 +84,18 @@ I have scaffolded a Button component for you, but I made a mistake by hardcoding
       {/* Floating Action Button */}
       <button 
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center bg-primary text-black shadow-md transition-transform duration-300 hover:scale-105 z-50 ${isOpen ? 'hidden' : 'flex'}`}
+        className={`fixed bottom-8 right-8 h-12 px-5 flex items-center gap-2 rounded-full transition-all duration-300 hover:scale-105 z-50 ${isOpen ? 'hidden' : 'flex'}`}
+        style={{ 
+          background: 'rgba(18, 18, 18, 0.9)', 
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+          paddingLeft: '1.25rem',
+          paddingRight: '1.25rem'
+        }}
       >
-        <MessageSquare size={24} />
+        <Bot size={20} className="text-accent" />
+        <span className="font-semibold text-white tracking-tight">AI Tutor</span>
       </button>
 
       {/* Chat Window */}
