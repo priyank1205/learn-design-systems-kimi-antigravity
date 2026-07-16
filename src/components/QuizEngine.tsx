@@ -62,17 +62,17 @@ export default function QuizEngine({ questions, onPass, onFail }: QuizEngineProp
     const passed = percentage >= 80;
 
     return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
+      <div className="text-center py-12">
         {passed ? (
-          <CheckCircle2 size={48} color="var(--accent-success)" style={{ margin: '0 auto 1rem' }} />
+          <CheckCircle2 size={48} className="text-success mx-auto mb-4" />
         ) : (
-          <XCircle size={48} color="var(--accent-error)" style={{ margin: '0 auto 1rem' }} />
+          <XCircle size={48} className="text-error mx-auto mb-4" />
         )}
-        <h3 style={{ marginBottom: '1rem' }}>{passed ? 'Quiz Passed!' : 'Quiz Failed'}</h3>
-        <p style={{ marginBottom: '2rem' }}>You scored {score} out of {questions.length} ({Math.round(percentage)}%).</p>
+        <h3 className="text-2xl font-bold mb-4">{passed ? 'Quiz Passed!' : 'Quiz Failed'}</h3>
+        <p className="text-secondary mb-8">You scored {score} out of {questions.length} ({Math.round(percentage)}%).</p>
         
         {!passed && (
-          <button onClick={handleRetry} className="secondary-btn">
+          <button onClick={handleRetry} className="btn btn-secondary">
             Try Again
           </button>
         )}
@@ -83,29 +83,35 @@ export default function QuizEngine({ questions, onPass, onFail }: QuizEngineProp
   const q = questions[currentQ];
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
+    <div className="flex flex-col">
+      <div className="flex justify-between items-center mb-8 text-sm font-semibold tracking-wider uppercase text-tertiary">
         <span>Question {currentQ + 1} of {questions.length}</span>
         <span>Score: {score}</span>
       </div>
 
-      <h3 style={{ marginBottom: '2rem', fontSize: '1.25rem' }}>{q.question}</h3>
+      <h3 className="text-xl font-medium mb-8 leading-relaxed">{q.question}</h3>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div className="flex flex-col gap-3">
         {q.options.map((opt, i) => {
-          let bg = 'var(--bg-surface)';
-          let border = '1px solid var(--border-subtle)';
+          let bgClass = 'bg-surface';
+          let borderClass = 'border-subtle';
+          let textClass = 'text-primary';
+          
           if (isAnswered) {
             if (i === q.correctIndex) {
-              bg = 'rgba(16, 185, 129, 0.1)';
-              border = '1px solid var(--accent-success)';
+              bgClass = 'bg-success-bg';
+              borderClass = 'border-success';
+              textClass = 'text-success';
             } else if (i === selectedOpt) {
-              bg = 'rgba(239, 68, 68, 0.1)';
-              border = '1px solid var(--accent-error)';
+              bgClass = 'bg-error-bg';
+              borderClass = 'border-error';
+              textClass = 'text-error';
+            } else {
+              bgClass = 'bg-base opacity-50';
             }
           } else if (selectedOpt === i) {
-            bg = 'var(--bg-surface-hover)';
-            border = '1px solid var(--accent-primary)';
+            bgClass = 'bg-surface-active';
+            borderClass = 'border-accent';
           }
 
           return (
@@ -113,17 +119,7 @@ export default function QuizEngine({ questions, onPass, onFail }: QuizEngineProp
               key={i}
               onClick={() => handleSelect(i)}
               disabled={isAnswered}
-              style={{
-                background: bg,
-                border,
-                padding: '1rem',
-                borderRadius: 'var(--radius-md)',
-                textAlign: 'left',
-                color: 'var(--text-primary)',
-                transition: 'all 0.2s ease',
-                cursor: isAnswered ? 'default' : 'pointer'
-              }}
-              className={!isAnswered ? 'hover-effect' : ''}
+              className={`p-4 rounded-md border text-left transition-all duration-200 ${bgClass} ${borderClass} ${textClass} ${!isAnswered ? 'hover:bg-surface-hover hover:border-strong cursor-pointer' : 'cursor-default'}`}
             >
               {opt}
             </button>
@@ -132,8 +128,8 @@ export default function QuizEngine({ questions, onPass, onFail }: QuizEngineProp
       </div>
 
       {isAnswered && (
-        <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-          <button onClick={handleNext} className="primary-btn">
+        <div className="mt-8 flex justify-end animate-slide-up">
+          <button onClick={handleNext} className="btn btn-primary">
             {currentQ < questions.length - 1 ? 'Next Question' : 'Finish Quiz'}
           </button>
         </div>

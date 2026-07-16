@@ -46,7 +46,6 @@ I have scaffolded a Button component for you, but I made a mistake by hardcoding
     setInput('');
     setLoading(true);
 
-    // Mock response for MVP Pair Programming
     if (pairMode) {
       setTimeout(() => {
         if (input.includes('#3B82F6') || input.toLowerCase().includes('hardcoded') || input.toLowerCase().includes('background')) {
@@ -85,100 +84,49 @@ I have scaffolded a Button component for you, but I made a mistake by hardcoding
       {/* Floating Action Button */}
       <button 
         onClick={() => setIsOpen(true)}
-        className="primary-btn hover-effect"
-        style={{
-          position: 'fixed',
-          bottom: '2rem',
-          right: '2rem',
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          display: isOpen ? 'none' : 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: 'var(--shadow-glow)',
-          zIndex: 50
-        }}
+        className={`fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center bg-primary text-black shadow-md transition-transform duration-300 hover:scale-105 z-50 ${isOpen ? 'hidden' : 'flex'}`}
       >
-        <MessageSquare size={28} />
+        <MessageSquare size={24} />
       </button>
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="glass-panel animate-fade-in" style={{
-          position: 'fixed',
-          bottom: '2rem',
-          right: '2rem',
-          width: '400px',
-          height: '600px',
-          maxHeight: '80vh',
-          display: 'flex',
-          flexDirection: 'column',
-          zIndex: 100,
-          overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.8)',
-          background: 'rgba(11, 10, 16, 0.85)',
-          backdropFilter: 'blur(16px)'
-        }}>
+        <div className="fixed bottom-8 right-8 w-full max-w-[400px] h-[600px] max-h-[80vh] flex flex-col z-50 overflow-hidden shadow-md bg-surface border border-subtle rounded-lg animate-slide-up">
           {/* Header */}
-          <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-base)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}>
-              <Bot color="var(--accent-primary)" /> AI Tutor
+          <div className="p-4 border-b border-subtle flex justify-between items-center bg-base">
+            <div className="flex items-center gap-2 font-semibold">
+              <Bot className="text-accent" /> AI Tutor
             </div>
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div className="flex items-center gap-4">
               <button 
                 onClick={togglePairMode} 
-                style={{ 
-                  color: pairMode ? 'var(--accent-warning)' : 'var(--text-secondary)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.25rem',
-                  fontSize: '0.75rem',
-                  background: pairMode ? 'rgba(245, 158, 11, 0.1)' : 'transparent',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: 'var(--radius-sm)'
-                }}
+                className={`flex items-center gap-1 text-xs px-2 py-1 rounded-sm transition-colors ${pairMode ? 'text-warning bg-warning-bg' : 'text-secondary hover:text-primary'}`}
                 title="Pair Programming Mode"
               >
                 <Code2 size={16} /> Pair Mode
               </button>
-              <button onClick={() => setIsOpen(false)} style={{ color: 'var(--text-secondary)' }}>
+              <button onClick={() => setIsOpen(false)} className="text-secondary hover:text-primary transition-colors">
                 <X size={20} />
               </button>
             </div>
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-[#0A0A0A]" style={{ minHeight: 0 }}>
             {messages.map((m, i) => (
-              <div key={i} style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: m.role === 'user' ? 'flex-end' : 'flex-start',
-                gap: '0.25rem'
-              }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <div key={i} className={`flex flex-col gap-1 ${m.role === 'user' ? 'self-end items-end' : 'self-start items-start'}`} style={{ minWidth: 0, maxWidth: '90%' }}>
+                <div className="text-xs text-tertiary flex items-center gap-1">
                   {m.role === 'user' ? <><User size={12}/> You</> : <><Bot size={12}/> Tutor</>}
                 </div>
-                <div style={{ 
-                  background: m.role === 'user' ? 'var(--accent-primary)' : 'rgba(255, 255, 255, 0.05)', 
-                  padding: '1rem', 
-                  borderRadius: 'var(--radius-md)', 
-                  border: m.role === 'user' ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
-                  color: m.role === 'user' ? '#fff' : 'var(--text-primary)',
-                  maxWidth: '90%',
-                  fontSize: '0.95rem',
-                  lineHeight: '1.6',
-                  boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                }}>
+                <div className={`p-4 rounded-md text-sm leading-relaxed overflow-hidden w-full ${m.role === 'user' ? 'bg-accent text-white' : 'bg-surface border border-subtle text-primary'}`}>
                   {m.role === 'user' ? m.content : (
-                    <div className="tutor-prose">
+                    <div className="tutor-prose" style={{ minWidth: 0 }}>
                       <style>{`
-                        .tutor-prose p { margin-bottom: 0.75rem; }
+                        .tutor-prose p { margin-bottom: 0.75rem; word-wrap: break-word; }
                         .tutor-prose p:last-child { margin-bottom: 0; }
-                        .tutor-prose code { background: rgba(0,0,0,0.3); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; font-size: 0.85em; }
-                        .tutor-prose pre { background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 0.75rem 0; border: 1px solid var(--border-subtle); }
-                        .tutor-prose pre code { background: transparent; padding: 0; }
+                        .tutor-prose code { background: var(--bg-base); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; font-size: 0.85em; border: 1px solid var(--border-subtle); word-break: break-word; }
+                        .tutor-prose pre { background: var(--bg-base); padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 0.75rem 0; border: 1px solid var(--border-subtle); max-width: 100%; }
+                        .tutor-prose pre code { background: transparent; padding: 0; border: none; word-break: normal; }
                         .tutor-prose strong { color: var(--accent-warning); }
                       `}</style>
                       <ReactMarkdown>{m.content}</ReactMarkdown>
@@ -188,31 +136,27 @@ I have scaffolded a Button component for you, but I made a mistake by hardcoding
               </div>
             ))}
             {loading && (
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Bot size={14} /> Tutor is thinking...
+              <div className="text-xs text-secondary flex items-center gap-2">
+                <Bot size={14} className="animate-pulse" /> Tutor is thinking...
               </div>
             )}
           </div>
 
           {/* Input */}
-          <div style={{ padding: '1rem', borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-base)', display: 'flex', gap: '0.5rem' }}>
+          <div className="p-4 border-t border-subtle bg-base flex gap-2">
             <input 
               type="text" 
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && sendMessage()}
               placeholder={pairMode ? "Spot the flaw..." : "Ask for a hint..."}
-              style={{
-                flex: 1,
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-sm)',
-                padding: '0.75rem',
-                color: 'var(--text-primary)',
-                outline: 'none'
-              }}
+              className="flex-1 bg-surface border border-subtle rounded-md p-3 text-primary text-sm outline-none focus:border-strong transition-colors"
             />
-            <button onClick={sendMessage} disabled={loading || !input.trim()} className="primary-btn" style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>
+            <button 
+              onClick={sendMessage} 
+              disabled={loading || !input.trim()} 
+              className={`p-3 rounded-md flex items-center justify-center transition-colors ${loading || !input.trim() ? 'bg-surface text-secondary cursor-not-allowed border border-subtle' : 'bg-primary text-black'}`}
+            >
               <Send size={18} />
             </button>
           </div>

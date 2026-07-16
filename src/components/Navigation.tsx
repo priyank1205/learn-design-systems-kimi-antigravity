@@ -14,33 +14,33 @@ export default function Navigation() {
   }, []);
 
   return (
-    <nav className="glass-panel" style={{ margin: '1rem', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <nav className="surface flex justify-between items-center px-8 py-4 m-4 mb-8">
       <Link href="/">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center font-bold rounded-md bg-white text-black w-8 h-8">
             DS
           </div>
-          <span style={{ fontWeight: '600', fontSize: '1.25rem', letterSpacing: '-0.02em' }}>Quest</span>
+          <span className="font-semibold text-xl tracking-tight text-primary">Quest</span>
         </div>
       </Link>
 
-      <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+      <div className="flex items-center gap-8">
         {mounted && (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-warning)' }}>
-              <Flame size={20} />
-              <span style={{ fontWeight: '600' }}>{streak} Day{streak !== 1 ? 's' : ''}</span>
+            <div className="flex items-center gap-2 text-warning font-semibold">
+              <Flame size={18} />
+              <span>{streak} Day{streak !== 1 ? 's' : ''}</span>
             </div>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent-primary)' }}>
-              <Star size={20} />
-              <span style={{ fontWeight: '600' }}>{xp} XP</span>
+            <div className="flex items-center gap-2 text-accent font-semibold">
+              <Star size={18} />
+              <span>{xp} XP</span>
             </div>
 
             <Link href="/profile">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-surface)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)', cursor: 'pointer' }} className="secondary-btn">
+              <div className="btn btn-secondary">
                 <Trophy size={16} />
-                <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{getRank()}</span>
+                <span>{getRank()}</span>
               </div>
             </Link>
           </>

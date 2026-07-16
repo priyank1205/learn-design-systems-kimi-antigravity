@@ -16,7 +16,6 @@ export default function InteractiveREPL({ type, onPass }: InteractiveREPLProps) 
     if (type === 'json') {
       try {
         const parsed = JSON.parse(code);
-        // Extremely simple DTCG validation for MVP
         const str = JSON.stringify(parsed);
         if (!str.includes('"$value"')) {
           setValidationResult({ valid: false, message: 'Invalid DTCG format. Missing $value property.' });
@@ -28,7 +27,6 @@ export default function InteractiveREPL({ type, onPass }: InteractiveREPLProps) 
         setValidationResult({ valid: false, message: `Invalid JSON: ${e.message}` });
       }
     } else {
-      // CSS validation (mock)
       if (code.includes('--') && code.includes('var(')) {
         setValidationResult({ valid: true, message: 'CSS Variables detected. Pipeline output is valid.' });
         onPass();
@@ -39,70 +37,42 @@ export default function InteractiveREPL({ type, onPass }: InteractiveREPLProps) 
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h4 style={{ margin: 0 }}>{type === 'json' ? 'tokens.json Editor' : 'variables.css Output'}</h4>
-        <button onClick={handleValidate} className="primary-btn" style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}>
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-between items-center mb-2">
+        <h4 className="font-semibold">{type === 'json' ? 'tokens.json Editor' : 'variables.css Output'}</h4>
+        <button onClick={handleValidate} className="btn btn-primary text-xs py-1.5 px-3">
           Validate Output
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', minHeight: '300px' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[300px]">
         {/* Editor Pane */}
-        <div style={{ 
-          background: 'rgba(0,0,0,0.3)', 
-          border: '1px solid var(--border-subtle)', 
-          borderRadius: 'var(--radius-md)',
-          padding: '1rem',
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
+        <div className="bg-[#050505] border border-subtle rounded-md p-4 flex flex-col focus-within:border-strong transition-colors">
           <textarea 
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder={type === 'json' ? "{\n  \"color\": {\n    \"blue\": {\n      \"$value\": \"#3B82F6\"\n    }\n  }\n}" : ":root {\n  --color-blue: #3B82F6;\n}"}
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              background: 'transparent', 
-              border: 'none', 
-              color: 'var(--text-primary)', 
-              fontFamily: 'monospace',
-              fontSize: '0.875rem',
-              resize: 'none',
-              outline: 'none',
-              lineHeight: '1.5'
-            }}
+            className="w-full h-full bg-transparent border-none text-primary font-mono text-sm resize-none outline-none leading-relaxed"
             spellCheck={false}
           />
         </div>
 
         {/* Validation Output Pane */}
-        <div style={{ 
-          background: 'var(--bg-surface)', 
-          border: '1px solid var(--border-subtle)', 
-          borderRadius: 'var(--radius-md)',
-          padding: '1.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center'
-        }}>
+        <div className="surface border border-subtle rounded-md p-8 flex flex-col items-center justify-center text-center">
           {validationResult ? (
-            <>
+            <div className="animate-slide-up flex flex-col items-center">
               {validationResult.valid ? (
-                <CheckCircle2 size={48} color="var(--accent-success)" style={{ marginBottom: '1rem' }} />
+                <CheckCircle2 size={48} className="text-success mb-4" />
               ) : (
-                <AlertCircle size={48} color="var(--accent-error)" style={{ marginBottom: '1rem' }} />
+                <AlertCircle size={48} className="text-error mb-4" />
               )}
-              <h3 style={{ color: validationResult.valid ? 'var(--accent-success)' : 'var(--accent-error)' }}>
+              <h3 className={`text-xl font-bold mb-2 ${validationResult.valid ? 'text-success' : 'text-error'}`}>
                 {validationResult.valid ? 'Success' : 'Validation Error'}
               </h3>
-              <p style={{ marginTop: '0.5rem' }}>{validationResult.message}</p>
-            </>
+              <p className="text-secondary">{validationResult.message}</p>
+            </div>
           ) : (
-            <p style={{ color: 'var(--text-tertiary)' }}>
+            <p className="text-tertiary max-w-xs">
               Write your code on the left and click Validate to check your work against the system requirements.
             </p>
           )}

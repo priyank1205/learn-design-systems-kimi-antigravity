@@ -2,7 +2,7 @@
 
 import { useGameStore, RANKS } from '@/lib/store';
 import { LEVELS } from '@/lib/levels';
-import { Trophy, Star, Flame, CheckCircle2, Lock, ArrowLeft } from 'lucide-react';
+import { Trophy, Star, Flame, CheckCircle2, Lock, ArrowLeft, Download, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -22,88 +22,91 @@ export default function ProfilePage() {
   const progressToNextRank = ((unlockedLevels + 1) / RANKS.length) * 100;
 
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '900px', margin: '0 auto', paddingTop: '1rem' }}>
-      <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+    <div className="animate-slide-up max-w-4xl mx-auto py-8">
+      <Link href="/" className="inline-flex items-center gap-2 text-secondary hover:text-primary transition-colors mb-8">
         <ArrowLeft size={16} /> Back to Map
       </Link>
 
-      <div style={{ display: 'flex', gap: '2rem', marginBottom: '4rem', alignItems: 'flex-start' }}>
+      <div className="flex flex-col md:flex-row gap-8 mb-16 items-start">
         {/* Stats Column */}
-        <div className="glass-panel" style={{ flex: 1, padding: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--bg-surface)', border: '2px solid var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Trophy size={32} color="var(--accent-primary)" />
+        <div className="surface p-8 flex-1 w-full">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-16 h-16 rounded-full bg-surface-hover border border-subtle flex items-center justify-center">
+              <Trophy size={32} className="text-primary" />
             </div>
             <div>
-              <h1 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{currentRank}</h1>
-              <p style={{ margin: 0 }}>Design System Explorer</p>
+              <h1 className="text-2xl font-bold mb-1">{currentRank}</h1>
+              <p className="text-secondary text-sm">Design System Explorer</p>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
-            <div style={{ background: 'var(--bg-base)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Total XP</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: '600', color: 'var(--accent-primary)' }}>
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="bg-base p-4 rounded-md border border-subtle">
+              <div className="text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Total XP</div>
+              <div className="flex items-center gap-2 text-2xl font-bold text-accent">
                 <Star size={24} /> {xp}
               </div>
             </div>
-            <div style={{ background: 'var(--bg-base)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Current Streak</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: '600', color: 'var(--accent-warning)' }}>
+            <div className="bg-base p-4 rounded-md border border-subtle">
+              <div className="text-secondary text-xs font-semibold uppercase tracking-wider mb-2">Current Streak</div>
+              <div className="flex items-center gap-2 text-2xl font-bold text-warning">
                 <Flame size={24} /> {streak}
               </div>
             </div>
           </div>
 
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-              <span style={{ color: 'var(--text-secondary)' }}>Rank Progress</span>
-              <span style={{ color: 'var(--accent-primary)' }}>Next: {nextRank}</span>
+            <div className="flex justify-between text-sm mb-2 font-medium">
+              <span className="text-secondary">Rank Progress</span>
+              <span className="text-primary">Next: {nextRank}</span>
             </div>
-            <div style={{ width: '100%', height: '8px', background: 'var(--bg-base)', borderRadius: '4px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${progressToNextRank}%`, background: 'var(--accent-primary)', transition: 'width 0.5s ease' }} />
+            <div className="w-full h-2 bg-base rounded-full overflow-hidden border border-subtle">
+              <div 
+                className="h-full bg-primary transition-all duration-1000 ease-out" 
+                style={{ width: `${progressToNextRank}%` }}
+              />
             </div>
           </div>
         </div>
 
         {/* Artifact Vault Column */}
-        <div style={{ flex: 2 }}>
-          <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            Portfolio Vault
-          </h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-            Artifacts you've built and verified are stored here for your final portfolio.
-          </p>
+        <div className="flex-[2] w-full">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
+              Portfolio Vault
+            </h2>
+            <p className="text-secondary">
+              Artifacts you've built and verified are stored here for your final portfolio.
+            </p>
+          </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div className="flex flex-col gap-4">
             {LEVELS.map(level => {
               const isBossCompleted = completedNodes[`${level.id}-boss`];
               return (
-                <div key={level.id} className="glass-panel" style={{ 
-                  padding: '1.5rem', 
-                  display: 'flex', 
-                  alignItems: 'center',
-                  gap: '1rem',
-                  opacity: isBossCompleted ? 1 : 0.5
-                }}>
-                  <div style={{ 
-                    width: '40px', height: '40px', borderRadius: '8px',
-                    background: isBossCompleted ? 'rgba(16, 185, 129, 0.1)' : 'var(--bg-base)',
-                    border: isBossCompleted ? '1px solid var(--accent-success)' : '1px dashed var(--border-subtle)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                  }}>
-                    {isBossCompleted ? <CheckCircle2 color="var(--accent-success)" /> : <Lock color="var(--text-secondary)" size={20} />}
+                <div key={level.id} className={`surface p-6 flex items-center gap-4 transition-all duration-300 ${isBossCompleted ? 'surface-hover' : 'opacity-60'}`}>
+                  <div className={`w-12 h-12 rounded-lg flex flex-shrink-0 items-center justify-center border ${
+                    isBossCompleted ? 'bg-success-bg border-success text-success' : 'bg-base border-dashed border-subtle text-tertiary'
+                  }`}>
+                    {isBossCompleted ? <CheckCircle2 size={24} /> : <Lock size={20} />}
                   </div>
-                  <div>
-                    <h4 style={{ margin: 0, fontSize: '1rem' }}>{level.title} Artifact</h4>
-                    <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                      {isBossCompleted ? 'Verified and securely stored.' : 'Complete the boss fight to unlock.'}
+                  
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-lg mb-1">{level.title} Artifact</h4>
+                    <p className="text-sm text-secondary">
+                      {isBossCompleted ? 'Verified and securely stored in your portfolio.' : 'Defeat the boss to unlock and store this artifact.'}
                     </p>
                   </div>
+                  
                   {isBossCompleted && (
-                    <button className="secondary-btn hover-effect" style={{ marginLeft: 'auto', padding: '0.5rem 1rem' }}>
-                      View Artifact
-                    </button>
+                    <div className="flex gap-2">
+                       <button className="btn btn-secondary">
+                         <Eye size={16} />
+                       </button>
+                       <button className="btn btn-primary">
+                         <Download size={16} />
+                       </button>
+                    </div>
                   )}
                 </div>
               );

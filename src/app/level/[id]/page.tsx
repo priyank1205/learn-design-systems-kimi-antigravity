@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { LEVELS } from '@/lib/levels';
 import { useGameStore } from '@/lib/store';
 import { useState, useEffect } from 'react';
-import { CheckCircle2, Lock, ArrowLeft, Book, FileText, Video, ExternalLink, Quote } from 'lucide-react';
+import { CheckCircle2, Lock, ArrowLeft, Book, FileText, Video, ExternalLink, Quote, ChevronRight } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import Link from 'next/link';
@@ -27,7 +27,6 @@ const DUMMY_QUESTIONS: Question[] = [
 
 const renderers = {
   h2: ({node, ...props}: any) => {
-    // Collect all text from children
     const textChildren = Array.isArray(props.children) ? props.children : [props.children];
     const fullText = textChildren.map((c: any) => typeof c === 'string' ? c : c?.props?.children).join('');
     
@@ -36,30 +35,37 @@ const renderers = {
       const numberPart = fullText.slice(0, firstSpaceIdx);
       const textPart = fullText.slice(firstSpaceIdx + 1);
       return (
-        <h2 style={{ fontSize: '1.75rem', marginTop: '3.5rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <span style={{ color: 'var(--accent-warning)', fontWeight: 700 }}>{numberPart}</span>
-          <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{textPart}</span>
+        <h2 className="text-2xl mt-12 mb-4 flex gap-3 items-center">
+          <span className="text-accent font-bold">{numberPart}</span>
+          <span className="text-primary font-semibold">{textPart}</span>
         </h2>
       );
     }
-    return <h2 style={{ fontSize: '1.75rem', marginTop: '3.5rem', marginBottom: '1.5rem', color: 'var(--text-primary)', fontWeight: 600 }} {...props} />;
+    return <h2 className="text-2xl mt-12 mb-4 text-primary font-semibold border-b border-subtle pb-2" {...props} />;
   },
   blockquote: ({node, ...props}: any) => (
-    <div style={{ padding: '1.5rem 0 1.5rem 1.5rem', borderLeft: '3px solid var(--accent-warning)', margin: '2.5rem 0', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-      <Quote size={20} style={{ color: 'var(--accent-warning)', flexShrink: 0, marginTop: '0.1rem' }} />
-      <div style={{ color: 'rgba(255, 255, 255, 0.85)', fontStyle: 'italic', lineHeight: 1.7, fontSize: '1.05rem' }}>{props.children}</div>
+    <div className="surface p-4 my-6 flex gap-4 items-start border-l-2 border-l-warning rounded-l-none">
+      <Quote size={20} className="text-warning flex-shrink-0 mt-1" />
+      <div className="text-secondary italic text-lg leading-relaxed">{props.children}</div>
     </div>
   ),
-  p: ({node, ...props}: any) => <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.75, letterSpacing: '0.01em' }} {...props} />,
-  strong: ({node, ...props}: any) => <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }} {...props} />
+  p: ({node, ...props}: any) => <p className="mb-6 text-secondary text-lg leading-relaxed" {...props} />,
+  strong: ({node, ...props}: any) => <strong className="text-primary font-semibold" {...props} />
 };
+
+type Step = 'theory' | 'practice' | 'boss';
+const STEPS: { id: Step; label: string }[] = [
+  { id: 'theory', label: '1. Theory' },
+  { id: 'practice', label: '2. Drills' },
+  { id: 'boss', label: '3. Boss' }
+];
 
 export default function LevelPage() {
   const params = useParams();
   const router = useRouter();
   const { unlockedLevels, completedNodes, addXp } = useGameStore();
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<'learn' | 'practice' | 'boss'>('learn');
+  const [activeStep, setActiveStep] = useState<Step>('theory');
 
   useEffect(() => {
     setMounted(true);
@@ -70,20 +76,20 @@ export default function LevelPage() {
   const id = params?.id as string;
   const level = LEVELS.find(l => l.id === id);
 
-  if (!level) {
-    return <div>Level not found.</div>;
-  }
+  if (!level) return <div className="container py-12 text-center text-secondary">Level not found.</div>;
 
   const isUnlocked = level.index <= unlockedLevels;
 
   if (!isUnlocked) {
     return (
-      <div style={{ textAlign: 'center', padding: '4rem' }}>
-        <Lock size={48} style={{ margin: '0 auto 1rem', color: 'var(--text-secondary)' }} />
-        <h2>Level Locked</h2>
-        <p>Complete the previous boss to unlock this level.</p>
-        <button onClick={() => router.push('/')} className="secondary-btn" style={{ marginTop: '2rem' }}>
-          Back to Map
+      <div className="container max-w-2xl text-center py-24 animate-slide-up">
+        <div className="w-20 h-20 bg-surface border border-subtle rounded-full flex items-center justify-center mx-auto mb-6 text-tertiary">
+          <Lock size={32} />
+        </div>
+        <h2 className="text-2xl font-bold text-primary mb-4">Classified Module</h2>
+        <p className="text-secondary mb-8">You must complete the previous boss to gain clearance for this module.</p>
+        <button onClick={() => router.push('/')} className="btn btn-secondary">
+          Return to Map
         </button>
       </div>
     );
@@ -93,8 +99,9 @@ export default function LevelPage() {
     if (!completedNodes[`${level.id}-theory`]) {
       useGameStore.getState().markNodeCompleted(`${level.id}-theory`);
       addXp(10);
-      setActiveTab('practice');
     }
+    setActiveStep('practice');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePracticePass = () => {
@@ -104,53 +111,67 @@ export default function LevelPage() {
     }
   };
 
+  const getStepStatus = (stepId: Step) => {
+    if (completedNodes[`${level.id}-${stepId}`]) return 'completed';
+    if (activeStep === stepId) return 'active';
+    
+    // Check if the previous step is completed to see if it's locked
+    if (stepId === 'practice' && !completedNodes[`${level.id}-theory`]) return 'locked';
+    if (stepId === 'boss' && !completedNodes[`${level.id}-practice`]) return 'locked';
+    return 'pending';
+  };
+
   return (
-    <div className="animate-fade-in" style={{ maxWidth: '900px', margin: '0 auto', paddingTop: '1rem' }}>
-      <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-        <ArrowLeft size={16} /> Back to Map
+    <div className="animate-slide-up max-w-3xl mx-auto py-8">
+      <Link href="/" className="inline-flex items-center gap-2 text-secondary hover:text-primary transition-colors mb-8">
+        <ArrowLeft size={16} /> Back to Curriculum
       </Link>
 
-      <div style={{ marginBottom: '3rem' }}>
-        <div style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)', fontWeight: '500', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ color: 'var(--accent-warning)' }}>Level {level.index}</span>
-          <span style={{ color: 'var(--border-subtle)' }}>•</span>
-          <span>{level.rank}</span>
+      <div className="mb-12">
+        <div className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2">
+          <span className="text-accent">Level {level.index}</span>
+          <span className="text-border-strong">•</span>
+          <span className="text-tertiary">{level.rank}</span>
         </div>
-        <h1 style={{ fontSize: '3.5rem', letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--text-primary)' }}>{level.title}</h1>
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-primary leading-tight">{level.title}</h1>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '2rem', borderBottom: '1px solid var(--border-subtle)', marginBottom: '3rem' }}>
-        {(['learn', 'practice', 'boss'] as const).map(tab => (
-          <button 
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={{ 
-              padding: '0 0 1rem 0', 
-              color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-secondary)',
-              borderBottom: activeTab === tab ? '2px solid var(--accent-warning)' : '2px solid transparent',
-              fontWeight: activeTab === tab ? '500' : '400',
-              textTransform: 'capitalize',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.2s ease',
-              marginBottom: '-1px'
-            }}
-          >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            {completedNodes[`${level.id}-${tab === 'learn' ? 'theory' : tab}`] && (
-              <CheckCircle2 size={14} color="var(--accent-success)" />
-            )}
-          </button>
-        ))}
+      {/* Stepper Navigation */}
+      <div className="flex items-center mb-12 relative">
+        <div className="absolute top-1/2 left-0 right-0 h-px bg-border-strong -z-10 transform -translate-y-1/2"></div>
+        {STEPS.map((step, idx) => {
+          const status = getStepStatus(step.id);
+          const isLocked = status === 'locked';
+          const isCompleted = status === 'completed';
+          const isActive = status === 'active';
+
+          return (
+            <div key={step.id} className="flex-1 flex justify-center bg-base relative z-0">
+              <button 
+                disabled={isLocked}
+                onClick={() => setActiveStep(step.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all duration-200 bg-base ${
+                  isActive ? 'border-accent text-primary bg-surface' :
+                  isCompleted ? 'border-success text-success bg-success-bg' :
+                  isLocked ? 'border-subtle text-tertiary opacity-50 cursor-not-allowed' :
+                  'border-subtle text-secondary hover:text-primary hover:border-strong cursor-pointer'
+                }`}
+              >
+                {isCompleted ? <CheckCircle2 size={16} /> : isLocked ? <Lock size={14} /> : null}
+                <span className="text-sm font-semibold">{step.label}</span>
+              </button>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Tab Content */}
-      <div style={{ paddingBottom: '4rem' }}>
-        {activeTab === 'learn' && (
-          <div className="animate-fade-in">
-            <div className="prose" style={{ lineHeight: '1.7' }}>
+      {/* Step Content */}
+      <div className="pb-16 min-h-[50vh]">
+        
+        {/* THEORY STEP */}
+        {activeStep === 'theory' && (
+          <div className="animate-slide-up">
+            <div className="prose">
               <ReactMarkdown 
                 rehypePlugins={[rehypeRaw]}
                 components={renderers}
@@ -160,19 +181,21 @@ export default function LevelPage() {
             </div>
             
             {level.resources && level.resources.length > 0 && (
-              <div style={{ marginTop: '4rem' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>Go deeper</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="mt-16">
+                <h3 className="text-xl font-semibold mb-6 border-b border-subtle pb-2">Further Reading</h3>
+                <div className="flex flex-col gap-4">
                   {level.resources.map((res, i) => (
-                    <a key={i} href={res.url} target="_blank" rel="noopener noreferrer" className="resource-card">
-                      <div className="resource-card-header">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                          {res.icon === 'video' ? <Video size={18} /> : res.icon === 'article' ? <FileText size={18} /> : <Book size={18} />}
+                    <a key={i} href={res.url} target="_blank" rel="noopener noreferrer" className="surface p-4 flex flex-col gap-2 surface-hover transition-all group">
+                      <div className="flex justify-between items-center text-primary font-medium">
+                        <div className="flex items-center gap-3">
+                          <span className="text-tertiary">
+                            {res.icon === 'video' ? <Video size={18} /> : res.icon === 'article' ? <FileText size={18} /> : <Book size={18} />}
+                          </span>
                           <span>{res.title}</span>
                         </div>
-                        <ExternalLink size={16} style={{ color: 'var(--text-tertiary)' }} />
+                        <ExternalLink size={16} className="text-tertiary group-hover:text-primary transition-colors" />
                       </div>
-                      <div className="resource-card-desc" style={{ paddingLeft: 'calc(18px + 0.75rem)' }}>
+                      <div className="pl-8 text-sm text-secondary">
                         {res.description}
                       </div>
                     </a>
@@ -181,28 +204,35 @@ export default function LevelPage() {
               </div>
             )}
 
-            <div style={{ marginTop: '4rem', display: 'flex', justifyContent: 'center' }}>
-              {!completedNodes[`${level.id}-theory`] && (
-                <button onClick={handleFinishReading} className="primary-btn hover-effect">
-                  Finish Reading (+10 XP)
+            <div className="mt-12 flex justify-end pt-8 border-t border-subtle">
+              {!completedNodes[`${level.id}-theory`] ? (
+                <button onClick={handleFinishReading} className="btn btn-primary">
+                  Complete Reading (+10 XP) <ChevronRight size={16} />
+                </button>
+              ) : (
+                <button onClick={() => {setActiveStep('practice'); window.scrollTo({ top: 0 });}} className="btn btn-secondary">
+                  Proceed to Drills <ChevronRight size={16} />
                 </button>
               )}
             </div>
           </div>
         )}
 
-        {activeTab === 'practice' && (
-          <div className="animate-fade-in">
-            <h3>Practice Drills</h3>
-            <p style={{ marginBottom: '2rem' }}>Complete the practice drills to unlock the boss.</p>
+        {/* PRACTICE STEP */}
+        {activeStep === 'practice' && (
+          <div className="animate-slide-up">
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold mb-2">Practice Drills</h3>
+              <p className="text-secondary">Validate your understanding to unlock the boss battle.</p>
+            </div>
             
             {!completedNodes[`${level.id}-practice`] ? (
               level.requiresRepl && level.replType ? (
-                <div className="animate-fade-in">
+                <div className="animate-slide-up">
                   <InteractiveREPL type={level.replType} onPass={handlePracticePass} />
                 </div>
               ) : (
-                <div style={{ padding: '1rem', background: 'var(--bg-base)', borderRadius: 'var(--radius-md)' }}>
+                <div className="surface p-6 rounded-lg">
                   <QuizEngine 
                     questions={DUMMY_QUESTIONS}
                     onPass={handlePracticePass}
@@ -211,22 +241,28 @@ export default function LevelPage() {
                 </div>
               )
             ) : (
-              <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--bg-base)', borderRadius: 'var(--radius-md)' }}>
-                 <CheckCircle2 size={48} color="var(--accent-success)" style={{ margin: '0 auto 1rem' }} />
-                 <h3 style={{ color: 'var(--accent-success)' }}>Drills Completed!</h3>
-                 <button onClick={() => setActiveTab('boss')} className="primary-btn" style={{ marginTop: '1.5rem' }}>
-                   Proceed to Boss
+              <div className="text-center py-16 surface rounded-lg">
+                 <div className="w-20 h-20 bg-success-bg text-success border border-success rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle2 size={40} />
+                 </div>
+                 <h3 className="text-2xl font-bold text-success mb-2">Drills Completed!</h3>
+                 <p className="text-secondary mb-8">You've mastered the theory and drills. You are ready.</p>
+                 <button onClick={() => {setActiveStep('boss'); window.scrollTo({ top: 0 });}} className="btn btn-primary">
+                   Proceed to Boss <ChevronRight size={16} />
                  </button>
               </div>
             )}
           </div>
         )}
 
-        {activeTab === 'boss' && (
-          <div className="animate-fade-in">
-            <h3>Boss Fight</h3>
-            <p>Upload your artifact to defeat the boss and unlock the next level.</p>
-            <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'var(--bg-base)', borderRadius: 'var(--radius-md)' }}>
+        {/* BOSS STEP */}
+        {activeStep === 'boss' && (
+          <div className="animate-slide-up">
+            <div className="mb-8">
+              <h3 className="text-2xl font-bold text-error mb-2">Boss Fight</h3>
+              <p className="text-secondary">Submit your compiled artifact to defeat the boss.</p>
+            </div>
+            <div className="surface p-6 rounded-lg border-error/30">
               <BossChecker levelId={level.id} levelIndex={level.index} />
             </div>
           </div>
