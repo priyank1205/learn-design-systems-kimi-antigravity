@@ -6,23 +6,23 @@
 
 ## 0. Design principles (read before building anything)
 
-1. **The game is thin; the work is real.** The app provides the quest map, XP, streaks, quizzes, an AI tutor, and verification. Every boss fight produces an artifact in the actual industry stack — Figma, tokens.json, Style Dictionary, Storybook, Claude Code. Nothing is simulated inside the app.
+1. **The game is thin; the work is real.** The app provides the quest map, XP, streaks, quizzes, an AI tutor, and verification. Every boss fight produces an artifact in the actual industry stack — Figma, tokens.json, Style Dictionary, Storybook, GitHub, Claude Code. Nothing is simulated inside the app.
 2. **Everything terminates in a portfolio artifact.** Each level deposits a piece into a `/portfolio` folder. The final boss assembles them into a mini design system + written case study. That artifact — not the XP — is what gets the job.
 3. **Quests are sized for one sitting.** 30–90 minutes each. A visible "next action" always exists. Reading never blocks building for long: theory node → tiny drill → boss.
-4. **Verification is real, not honor-system.** Wherever an artifact is code/JSON, the app checks it programmatically (schema validation, build success, token audits). Figma work uses checklists + screenshots in v1.
-5. **Depth over coverage.** This curriculum is opinionated and links out to living sources rather than re-hosting content. The AI layer especially changes monthly — Level 8's resource list is dated and should be refreshed each run.
+4. **Verification is real, not honor-system.** Wherever an artifact is code/JSON, the app checks it programmatically (schema validation, build success, token audits). Figma work uses checklists, visual tests, or Figma MCP.
+5. **Depth over coverage.** This curriculum is opinionated and links out to living sources rather than re-hosting content. The AI layer changes monthly — Level 8's resource list is dated and should be refreshed each run.
 6. **The tutor teaches from first principles.** Every concept gets a "why does this exist at all" framing before the "how." The tutor is Socratic and is *forbidden* from producing boss artifacts.
 
 ---
 
-## 1. The game shell (keep it this thin)
+## 1. The game shell & Learning mechanics
 
 ### 1.1 Screens
 - **Quest map** — linear path of 10 nodes (Prologue → Level 8 → Final Boss) plus optional side-quest branches.
-- **Level page** — three tabs: **Learn** (theory + resources), **Practice** (drills + quiz), **Boss** (quest brief, submission, verification result).
-- **Profile** — XP, streak, rank, artifact vault (mirror of the `/portfolio` folder).
+- **Level page** — three tabs: **Learn** (theory + resources), **Practice** (drills + quiz), **Boss** (quest brief, submission, verification result). Note: For coding levels, the Practice tab embeds an interactive REPL so feedback loops are instant.
+- **Profile** — XP, streak, rank, achievements, and the artifact vault.
 
-### 1.2 Progression & XP economy
+### 1.2 Progression, XP economy & Achievements
 | Action | XP |
 |---|---|
 | Finish a reading/watch | 10 |
@@ -31,43 +31,35 @@
 | Beat a boss | 150 (Levels 7–8: 300) |
 | Daily streak multiplier | ×1.1, caps at ×2.0 |
 
-Bosses gate progress: boss *N* must pass before level *N+1* unlocks. Side quests are optional and award XP only.
+**Achievements for Edge Cases:** Grant badges for catching complex edge cases (e.g., the "Contrast Champion" badge for spotting a #FFFFFF text on a #F3F4F6 background during a drill).
 
-**Ranks** (one per level, for flavor): Déjà-Vu Hunter → Token Smith → Variable Wrangler → Component Architect → Pipeline Engineer → Storybook Keeper → Docwright → Governor → Agent Whisperer → **System Architect**.
+**Ranks:** Déjà-Vu Hunter → Token Smith → Variable Wrangler → Component Architect → Pipeline Engineer → Storybook Keeper → Docwright → Governor → Agent Whisperer → **System Architect**.
 
-### 1.3 The AI tutor
+### 1.3 The AI tutor & Pair Programming
 - Explains each concept from first principles with analogies, then quizzes adaptively.
-- Reviews written artifacts (reflections, RFCs, docs) against a rubric and gives actionable feedback.
-- **Hard rule:** on boss screens the tutor answers questions and offers a 3-level hint ladder, but never writes the artifact. This is the anti-procrastination guardrail — the game can't play itself.
+- **Pair Programming Drills:** The tutor doesn't just answer questions; it acts as the "Driver" during specific drills. The tutor writes flawed code or tokens, and the user must act as the "Navigator/Reviewer" to spot the system violations.
+- **Hard rule:** on boss screens the tutor answers questions and offers a 3-level hint ladder, but never writes the artifact. 
 
 ### 1.4 Verification engine (per quest type)
-| Artifact type | How the app verifies |
-|---|---|
-| Token JSON | Parses; checks DTCG structure (`$value`/`$type`); all `{references}` resolve; semantic tier contains references, not raw hex |
-| Builds (Style Dictionary, Tailwind) | Runs the build; checks output files exist and contain expected token names |
-| Component code / HTML | Grep audit: no raw hex/px outside the generated token file; Storybook starts; stories exist |
-| Figma artifacts | Checklist + screenshot upload (v1); optional later: verify variable collections/modes via Figma MCP |
-| Written artifacts | AI rubric review (rubric stored per quest) |
-
-Implement checkers as small scripts the app runs — even if the scripts themselves are AI-generated at build time, verification at run time is objective.
-
-### 1.5 Content model
-All content (theory text, resource links, quiz questions, quest briefs, rubrics) lives in plain Markdown/JSON files. **Do not build a CMS.** Edit by hand or with an agent.
+- **Token JSON:** Parses; checks DTCG structure; semantic tier contains no raw hex.
+- **Builds:** Runs the build; checks output files via CI/CD.
+- **Code:** Grep/AST audit: no raw hex/px outside generated files; Chromatic visual regression passes.
+- **Figma:** Figma MCP server audits variables and component APIs directly.
 
 ---
 
 ## 2. The system you'll build (the through-line)
 
-Across all levels you construct one coherent mini design system — pick a fictional product (a habit tracker, a recipe app, anything you'd enjoy re-theming):
+Pick a fictional product (a habit tracker, a recipe app). Across all levels, construct one coherent mini design system:
 
-- **Tokens:** ~40–60 across color, spacing, typography, radius — primitive → semantic → component tiers, DTCG-format JSON
-- **Modes:** light + dark (side quests: density, second brand)
-- **Components:** Button, Input, Card, Badge (+1 of your choice) — in Figma *and* in code
-- **Pipeline:** Figma → Tokens Studio → tokens.json (Git) → Style Dictionary → CSS variables + Tailwind theme
-- **Docs:** Storybook with usage/anatomy/do-don't pages
-- **Governance:** contribution + versioning + deprecation RFC, one executed breaking change
-- **AI layer:** CLAUDE.md system rules, Code Connect mapping, Claude Code generating on-system UI via Figma MCP
-- **Case study:** the capstone write-up tying it together
+- **Tokens:** Accessible color matrix (APCA/WCAG math), Spacing, Typography (fluid scales), Shadows/Elevation, Motion (duration/easing) — primitive → semantic → component tiers in DTCG.
+- **Modes:** Light/Dark, Density (Compact/Comfortable), Viewport Breakpoints.
+- **Components:** Layout Primitives (Box, Stack), UI Components (Button, Input), and a Compound Component (Select/Accordion).
+- **Pipeline:** Figma → Tokens Studio → GitHub Actions → Style Dictionary → CSS Variables.
+- **Docs:** Storybook with interactive playgrounds and Chromatic visual regression.
+- **Governance:** Contribution RFC, tracking detachment metrics, and one executed breaking change.
+- **AI layer:** CLAUDE.md context constraints, Code Connect, Claude Code generation via Figma MCP.
+- **Case study:** The capstone write-up tying it together.
 
 ---
 
@@ -79,295 +71,195 @@ Across all levels you construct one coherent mini design system — pick a ficti
 *Unlock condition: none. Rank: Déjà-Vu Hunter.*
 
 **Theory (first principles)**
-- A design system is **cached decisions**. Every recurring UI question ("which blue? how much padding?") answered once and reused, instead of re-decided per screen.
-- Decision math: *N* designers × *M* screens produce O(N·M) ad-hoc decisions; a system collapses that to O(N). Inconsistency isn't an aesthetic flaw — it's compounding maintenance cost and eroded user trust.
-- The system is a **contract** between design and engineering: a shared vocabulary where "primary button" means one identical thing to both sides.
-- A system exists to serve the product and its team — a system nobody adopts is a museum, not a product.
+- **Why do systems exist?** A design system is **cached decisions**. Every recurring UI question ("which blue? how much padding?") answered once and reused. Decision math: *N* designers × *M* screens produce O(N·M) ad-hoc decisions; a system collapses that to O(N).
+- **The System vs. The Product:** *Why do we draw a boundary?* Because a system that tries to do everything becomes an unmaintainable monolith. A system provides the primitives; the product provides the context. A system nobody adopts is a museum, not a product.
+- The system is a **contract** between design and engineering.
 
 **Resources**
-- *Atomic Design*, Brad Frost — ch. 1–2 re-read with fresh eyes (free online: https://atomicdesign.bradfrost.com)
-- "What is a Design System?" and related essays — Nathan Curtis (https://medium.com/@nathanacurtis)
-- *Design Systems Handbook* — DesignBetter (free: https://www.designbetter.co/design-systems-handbook)
-- Skim a real system's "Foundations" section: Shopify Polaris (https://polaris.shopify.com) or IBM Carbon (https://carbondesignsystem.com)
+- *Atomic Design*, Brad Frost — ch. 1–2 re-read with fresh eyes.
+- "What is a Design System?" — Nathan Curtis
 
 **Drills**
-- Find 3 different "primary" buttons in one product you use daily; screenshot them.
-- Quiz: 5 questions on the theory above.
+- Find 3 different "primary" buttons in one product you use daily. 
 
 **🏆 Boss: The Interface Inventory**
-Screenshot 8–10 screens of one product (yours or a public app like Spotify/Airbnb). Crop every button into a single Figma page. Count the near-duplicates. Write 150 words: what does this cost at 10× the screens and 5× the designers?
-- *Verify:* checklist + screenshot; AI rubric on the reflection (must name consistency cost, maintenance cost, and user trust).
-- *Portfolio:* the inventory page + reflection.
+Screenshot 8–10 screens of one product. Crop every button and input into a single Figma page. Write 150 words: what does this cost at 10× the screens and 5× the designers?
 
 ---
 
-### 🪙 Level 1 — Tokens from First Principles
+### 🪙 Level 1 — Tokens & The Math of Perception
 *Rank: Token Smith.*
 
 **Theory (first principles)**
-- A token is a **named decision**. The name is the API; the value is an implementation detail.
-- **Indirection** is the whole trick: components reference *purpose* (`color.action.primary`), never *value* (`#3B82F6`). Then a decision can change everywhere without touching any consumer.
-- **Three tiers**, each answering a different question:
-  - *Primitive* — what exists? Raw, context-free palette/scales (`blue.500`, `space.4`).
-  - *Semantic* — what does it mean? Context-aware aliases (`color.surface.default`, `color.text.danger`).
-  - *Component* — where is it used? (`button.background.hover` → `color.action.primary.hover`).
-- **DTCG anatomy:** every token has `$value`, `$type`, optional `$description`; references use `{color.blue.500}` syntax. The DTCG format hit its **first stable version (2025.10)** — it's the closest thing to an industry standard, so we build on it from day one.
-- Naming is the hardest problem in the whole field. Convention: category → concept → property → variant → state.
+- **Why do tokens exist?** **Indirection** is the whole trick. A token is a named decision. Components reference *purpose*, never *value*.
+- **Why algorithms for color?** *Why not just pick what looks good?* Human color perception is non-linear. Accessibility must be baked into the primitive tier. You don't pick colors; you calculate accessible scales based on perceptual contrast (WCAG/APCA).
+- **Why extract typography and space?** To prevent magic numbers. Fluid typography scales and shadow/elevation (mapping z-index to physics) are essential. *Composite tokens* bundle these into reusable styles.
+- **Three tiers:** Primitive (what exists?), Semantic (what does it mean?), Component (where is it used?).
+- **DTCG anatomy:** `$value`, `$type`, `{references}`.
 
 **Resources**
-- DTCG spec + glossary: https://www.designtokens.org (living drafts at /TR/drafts)
-- "Intro to Design Tokens" — Tokens Studio docs: https://docs.tokens.studio/fundamentals/design-tokens/
-- Token naming guides — Tokens Studio docs: https://docs.tokens.studio/manage-tokens/token-names/
-- "Naming Tokens in Design Systems" — Nathan Curtis (via https://medium.com/@nathanacurtis)
+- DTCG spec: https://www.designtokens.org
+- Accessible Perceptual Contrast Algorithm (APCA) reading.
 
 **Drills**
-- Given 5 raw hex values, write primitive names; given a UI screenshot, propose semantic names; spot the tier violation in 3 examples.
-- Quiz: primitive vs. semantic vs. component; why indirection; what `$type` does.
+- Use contrast math to find the minimum passing hex for a given background. 
 
 **🏆 Boss: Your First tokens.json**
-Hand-write a DTCG-format `tokens.json`: ≥6 primitive colors, a 4pt spacing scale, a semantic tier (surface/text/action, with light **and** dark values), and 3 component tokens for a Button. No tooling — just you and a text editor. (Feeling the pain of hand-authoring is the point; it makes Level 4's pipeline meaningful.)
-- *Verify:* JSON parses; `$value`/`$type` present; all `{references}` resolve; semantic tier contains zero raw hex.
-- *Portfolio:* `tokens.json` v0.1.0.
+Hand-write a DTCG-format `tokens.json`: An accessible color matrix, a typography scale (fontSize, lineHeight), and a spacing scale. Semantic tier (surface/text/action) must exist. No tooling — just a text editor or the app's REPL.
+- *Verify:* JSON parses; references resolve; zero raw hex in semantic tier; contrast math checks pass.
 
 ---
 
-### 🎛️ Level 2 — Figma Variables & Modes
+### 🎛️ Level 2 — Figma Variables, Modes, & Space
 *Rank: Variable Wrangler.*
 
 **Theory (first principles)**
-- Figma variables are **Figma-native tokens**: collections ≈ token tiers, groups ≈ token groups, aliases ≈ references.
-- **Modes are context axes**: the dimensions along which values change — light/dark, brand A/B, density, language. One collection, *N* contexts, zero duplicated components.
-- Variables vs. styles: styles bundle multiple properties; variables are atomic, aliasable, and mode-aware. Scoping controls where a variable may be applied.
-- The mapping you built in your head in Level 1 now has a native home — this is where tokens stop being theory.
+- **Why Modes?** Modes are **context multipliers**. They decouple the *meaning* (e.g., `color.surface.default`) from the *environment* (Light/Dark).
+- **Why Density and Viewport Modes?** Because responsive design isn't just stretching boxes; it's changing the mathematical relationships of space.
+- Figma variables are Figma-native tokens. Scoping controls where a variable may be applied.
 
 **Resources**
-- Figma Help Center — the variables & modes guides: https://help.figma.com (search "Guide to variables in Figma" / "modes")
-- Figma's official YouTube tutorials on variables and modes: https://www.youtube.com/@Figma
-- Christine Vallaure's practical variables writing: https://christinevallaure.substack.com
+- Figma variables & modes guides.
 
 **Drills**
-- Rebuild your Level 1 primitives as one collection; semantic tier as a second collection with Light/Dark modes, aliasing into primitives.
-- Scope color variables so fills/strokes/text only see appropriate tokens.
+- Scope variables so fills/strokes only see color tokens, and paddings only see spacing tokens.
 
-**🏆 Boss: The Re-Theming Card**
-Design a profile card (avatar, name, bio, one button) fully bound to semantic variables. Add a mode switch.
-- *Pass condition:* toggling the frame's mode re-themes the entire card with **zero** manual edits; Inspect shows no raw hex anywhere.
-- *Verify:* checklist + before/after screenshots.
-- *Portfolio:* Figma library file, v0.2.0.
+**🏆 Boss: The Responsive, Re-Theming Card**
+Design a profile card bound to semantic variables. Add modes: Light/Dark AND a Density mode (Compact/Comfortable). 
+- *Pass condition:* Toggling modes re-themes and resizes the entire card with zero manual edits.
 
 ---
 
-### 🧱 Level 3 — Component Architecture
+### 🧱 Level 3 — Component & Layout Architecture
 *Rank: Component Architect.*
 
 **Theory (first principles)**
-- A component is an **API**: variants and props are its signature. Design the API before the pixels — consumers will depend on it.
-- Atomic Design maps onto reality here: atoms ≈ tokens + base components; molecules/organisms are **composition**. Prefer composition over configuration; prefer slots (icon slot) over boolean sprawl.
-- **States are first-class:** default, hover, focus, active, disabled, loading, error. If a state isn't in the system, it will be invented on a deadline.
-- **The token audit:** every visual property of a component must trace to a token. A component with a raw hex is a bug.
+- **Why Layout Primitives?** **Composition over Configuration.** If you don't provide a `Stack` or `Box` component, designers will invent custom margins everywhere, defeating the system.
+- A component is an **API**: variants and props are its signature.
+- **Compound Components:** *Why separate parent and child?* Because boolean sprawl (`hasIcon`, `hasAvatar`, `hasBadge`) creates unmaintainable mega-components. Slot architectures (like Select/Dropdown or Accordions) are the solution.
+- **States are first-class:** default, hover, focus, active, disabled.
 
 **Resources**
-- Figma Help Center — component properties & variants guides: https://help.figma.com
-- Component API thinking: study the Button pages of Shopify Polaris (https://polaris.shopify.com) and GitHub Primer (https://primer.style) — note how props map to variants
-- "Component Specifications" — Nathan Curtis (EightShapes)
+- Shopify Polaris and GitHub Primer documentation.
 
 **Drills**
-- Draw the anatomy of a Button (container, label, icon slot, padding tokens, state layers).
-- Critique: find 2 prop/API decisions on Polaris' Button page you'd make differently, and say why.
+- Draw the API signature (props/variants) of a complex Accordion component.
 
-**🏆 Boss: The Button Component Set**
-Build Button in Figma: 3 variants (primary/secondary/ghost) × 2 sizes × states (default/hover/pressed/disabled), auto layout, icon slot, every fill/type/spacing bound to variables.
-- *Pass condition:* token audit passes (no unbound properties); changing one semantic token re-skins **all** variants at once.
-- *Verify:* checklist + screenshots; optional Figma MCP audit.
-- *Portfolio:* the component set + anatomy diagram.
+**🏆 Boss: The Primitives and The Compound**
+Build a `Stack` layout primitive and a Compound Component (e.g., an Accordion) in Figma. Auto layout, slot architecture, every visual property bound to variables.
+- *Pass condition:* Token audit passes; modifying the `Stack` adjusts the Accordion's internal spacing globally.
 
 ---
 
-### 🔄 Level 4 — The Pipeline: Single Source of Truth
+### 🔄 Level 4 — The Pipeline & Automation
 *Rank: Pipeline Engineer.*
 
 **Theory (first principles)**
-- **Drift is the default.** Design and code diverge unless something mechanically prevents it. That something is the pipeline.
-- `tokens.json` is the product; **everything else is a build artifact.** The flow: Figma (authoring) → Tokens Studio (export/sync) → tokens.json in Git (source of truth) → Style Dictionary (transform) → CSS variables / Tailwind theme / anything (distribution).
-- Transforms adapt names/values per platform (kebab-case, px→rem); formats define output files. Style Dictionary v4 is the current major version.
-- Version the tokens file like code — this foreshadows Level 7's governance.
+- **Why automate?** **Drift is inevitable without enforcement.** Human discipline doesn't scale. If design tokens aren't treated like code pipelines, they will diverge.
+- `tokens.json` is the product; everything else is a build artifact. 
+- **Token CI/CD:** *Why CI/CD for design?* To bridge the gap between design and DevOps. A change in Figma should trigger a GitHub Action, which runs Style Dictionary and outputs CSS.
 
 **Resources**
-- Style Dictionary docs: https://styledictionary.com (+ GitHub: https://github.com/style-dictionary/style-dictionary)
-- Tokens Studio docs (export from Figma, GitHub sync): https://docs.tokens.studio
-- "A Design Tokens Workflow" series — Stuart Robson: https://www.alwaystwisted.com/articles/a-design-tokens-workflow-part-1.html
-- Tokens Studio on Style Dictionary v4 changes: https://tokens.studio/blog/style-dictionary-v4-plan
+- Style Dictionary docs.
 
 **Drills**
-- Export your Figma variables via Tokens Studio to DTCG JSON; diff it against your hand-written Level 1 file.
-- Run the Style Dictionary basic example; read the generated CSS.
+- Run the Style Dictionary basic example in the REPL; read the generated CSS.
 
-**🏆 Boss: One Change Propagates**
-Wire the full pipeline: Figma → Tokens Studio → `tokens.json` → Style Dictionary → `variables.css` + Tailwind theme. Build a plain HTML page (your profile card, recreated) styled **only** with generated CSS variables, with a light/dark toggle.
-Then the epiphany test: change one semantic token **in Figma**, re-export, rebuild — the page updates. No hand-edited CSS allowed, ever.
-- *Verify:* build script runs clean; output contains expected var names; grep audit finds no raw hex in HTML/CSS outside the generated token file.
-- *Portfolio:* repo with `tokens.json` + build script + generated outputs.
+**🏆 Boss: Token CI/CD Pipeline**
+Wire Figma → Tokens Studio → GitHub. Set up a simple GitHub Action that triggers Style Dictionary to build CSS variables when the JSON changes. 
+- *Pass condition:* A commit to the JSON file successfully generates `variables.css` in a `/dist` folder via CI/CD.
 
 ---
 
-### 💻 Level 5 — Components in Code & Storybook
+### 💻 Level 5 — Code, Storybook, & AI Scaffolding
 *Rank: Storybook Keeper.*
 
 **Theory (first principles)**
-- The coded library is the **other projection** of the same system. Design and code are two views of one truth; parity is the goal (prop names mirror Figma variant names — the contract again).
-- **Storybook** is a workbench and living documentation: a *story* is the code equivalent of a Figma variant — one state, rendered live, props defined.
-- Modern component stack thinking: headless primitives (Radix) own behavior + accessibility; your tokens own the look. shadcn/ui popularized a distribution model where you **own the component source** — which, conveniently, is also the most agent-friendly model, since AI coding tools can read and edit source in your repo.
-- Tailwind enters here as a *consumer* of tokens: your semantic tokens compile into the Tailwind theme, so utilities like `bg-action-primary` stay on-system. (Tailwind is a framework, not a system — the tokens are the system.)
+- **Why scaffold with AI?** AI is an accelerator, not a creator. A design system is highly patterned; patterned work is what AI is best at. We use agents here to generate the boilerplate React code from our JSON definitions.
+- **Why Visual Regression?** Humans are fundamentally bad at spotting a 2px padding shift across 100 components during a code review. You cannot ship breaking changes confidently without automated eyes.
+- The coded library is the *other projection* of the same system. Parity is the goal.
 
 **Resources**
-- Storybook tutorials hub: https://storybook.js.org/tutorials (esp. *Design Systems for Developers*)
-- Radix Primitives: https://www.radix-ui.com/primitives
-- shadcn/ui: https://ui.shadcn.com — read how it layers on Radix + Tailwind (primer: https://vercel.com/i/shadcn-vs-radix)
+- Radix Primitives and shadcn/ui architectures.
+- Chromatic / Storybook docs.
 
 **Drills**
-- Stand up Storybook in your repo; write one "Hello" story.
-- Install shadcn/ui's Button in a scratch project; read the source; note where tokens/CSS vars live.
+- Use an AI agent to scaffold the React code for your `Stack` component based on your Figma API.
 
-**🏆 Boss: The Coded Button**
-Implement your Level 3 Button in React, styled with your generated CSS variables (or Tailwind theme). Stories for every variant × size × state, plus an autodocs page.
-- *Pass condition:* side-by-side Figma vs. Storybook screenshots match to your own eyeball standard; a11y checks pass; grep audit: no hard-coded values in component files.
-- *Verify:* Storybook builds; stories enumerated; grep audit.
-- *Portfolio:* component code + deployed Storybook (Chromatic or GitHub Pages).
+**🏆 Boss: The Coded Compound with Testing**
+Implement your Compound Component in React, styled with your generated CSS variables. Stand up Storybook. Wire up Chromatic for visual regression testing and capture a baseline.
 
 ---
 
-### 📖 Level 6 — Documentation: The System Is a Product
+### 📖 Level 6 — Documentation & Friction
 *Rank: Docwright.*
 
 **Theory (first principles)**
-- A design system is a **product** whose customers are designers and engineers. Docs are its UI; adoption is the metric.
-- Anatomy of a great component page: when to use / when *not* to, anatomy, variants, props, tokens used, do/don't pairs, accessibility notes.
-- **Document decisions, not just usage.** The "why" behind a token or prop is what future-you (and, soon, AI agents) need. Rationale is a first-class artifact.
+- **Why Interactive Playgrounds?** Adoption is inversely proportional to friction. If an engineer can't copy-paste working code instantly, they will build it themselves. Docs are a product; engineers are the users.
+- Document decisions, not just usage. The "why" behind a token is what future-you (and AI agents) need.
 
 **Resources**
-- Study world-class docs as artifacts: Polaris (https://polaris.shopify.com), Carbon (https://carbondesignsystem.com), Material 3 (https://m3.material.io), Atlassian (https://atlassian.design)
-- Nathan Curtis's documentation essays: https://medium.com/@nathanacurtis
-- Optional deep cut: *Expressive Design Systems* by Yesenia Perez-Cruz
+- Polaris, Carbon, Material 3 documentation.
 
 **Drills**
-- Rewrite one Polaris "do/don't" pair for your own Button.
-- Write your token tier philosophy in 200 words: why three tiers, why these names.
+- Write your token tier philosophy in 200 words.
 
-**🏆 Boss: The Stranger Test**
-Write docs for your tokens (tiers, naming rules) and your Button (usage, anatomy, props, tokens, do/don'ts) in Storybook MDX. Then hand the docs to someone with zero context — a friend, or an AI agent in a fresh session — with one task: "build a settings row with a destructive action."
-- *Pass condition:* they pick the right component and tokens **without asking you anything**. Every question they had to ask becomes a doc fix.
-- *Verify:* AI rubric + test transcript.
-- *Portfolio:* docs pages + test notes.
+**🏆 Boss: The Stranger Test with Playgrounds**
+Write docs for your Compound Component in Storybook MDX, including interactive code snippets. Hand the docs to a stranger (or fresh AI session) with one task: "build a settings page using these layouts."
+- *Pass condition:* They succeed without asking you any clarifying questions.
 
 ---
 
-### 🏛️ Level 7 — Governance: Versioning, Contribution, Deprecation
-*Rank: Governor. (The level that separates senior candidates.)*
+### 🏛️ Level 7 — Governance & Metrics
+*Rank: Governor.*
 
 **Theory (first principles)**
-- Systems fail **socially before they fail technically**. The hard problems are adoption, contribution, and change management — not pixels.
-- Team models (Nathan Curtis): **solitary** (one team builds for itself), **centralized** (a dedicated team serves all), **federated** (product teams co-own). Know the tradeoffs; interviewers ask.
-- **Semver for design systems:** what's breaking? Renaming/removing a token, changing a semantic mapping, removing a variant. Breaking changes need deprecation windows, changelogs, and migration guides.
-- Measure what matters: adoption coverage, Figma detachment rate, % of UI built from system parts.
+- **Why Metrics?** You cannot govern what you cannot measure. Without usage data (detachment rates, codebase adoption), deprecations are guesswork.
+- Systems fail **socially before they fail technically**.
+- **Semver for design systems:** what's breaking? Renaming a token, removing a variant. Breaking changes need deprecation windows and migration guides.
 
 **Resources**
-- Nathan Curtis — "Team Models for Scaling a Design System" and versioning/governance essays: https://medium.com/@nathanacurtis
-- EightShapes' public design-systems work: https://eightshapes.com
-- Real governance in the wild: read Carbon's or Primer's contribution docs on GitHub
+- Nathan Curtis essays on Governance and Versioning.
 
 **Drills**
-- Classify 6 changes as major/minor/patch (e.g., "adjust `space.4` from 16px to 20px" vs. "rename `color.action.primary`").
-- Sketch a contribution flow for a hypothetical 5-designer team.
+- Classify 6 changes as major/minor/patch.
 
-**🏆 Boss: Ship a Breaking Change Properly**
-1. Write a 1–2 page **governance RFC** for your mini-system: who can contribute, review process, semver policy, deprecation policy, adoption metrics.
-2. Execute a breaking change end-to-end: rename a semantic token (e.g., `color.action.primary` → `color.action.brand`), bump to v2.0.0, write the changelog + migration notes, update Figma, pipeline, code, and docs. Include a find/replace "codemod" step for consumers.
-- *Pass condition:* v2 ships with zero dangling references to the old name (script checks), and the migration notes would let a stranger upgrade unaided.
-- *Verify:* grep audit for old token name; AI rubric on the RFC.
-- *Portfolio:* RFC + changelog + migration guide. **This folder alone is interview gold.**
+**🏆 Boss: Ship a Breaking Change & Measure It**
+1. Write a governance RFC: review process, semver policy.
+2. Execute a breaking change: rename a semantic token, bump to v2.0.0, write migration notes.
+3. Establish a method for tracking metrics (e.g., using an AST scanner script to count component imports in a repo).
+- *Pass condition:* v2 ships with zero dangling references.
 
 ---
 
-### 🤖 Level 8 — The AI Layer: Agent-Readable Systems
-*Rank: Agent Whisperer. Resources in this level are dated — refresh before each run.*
+### 🤖 Level 8 — The AI Layer: Context Engineering
+*Rank: Agent Whisperer.*
 
 **Theory (first principles)**
-- An agent doesn't "see" your system; it reads whatever context you provide. Off-system output is a **context failure**, not a model failure.
-- A machine-readable system = DTCG tokens + component descriptions + Code Connect mappings + rules files (`CLAUDE.md`/`AGENTS.md`, cursor rules) + Storybook stories (behavioral spec). Each layer answers a different agent question.
-- **Figma MCP server** (now remote-hosted): agents extract variables, components, and layout from your files and generate code referencing the *real* system; write-to-canvas skills let agents create on-system Figma content. **Code Connect** points agents at your actual code components instead of hallucinated markup.
-- **Figma's own canvas agent** (launched May 2026) @-mentions tokens/variables/components and does bulk on-system edits and documentation — the system is literally the agent's vocabulary.
-- The new senior skill: **context engineering for a design system** — curating exactly what the agent knows, and proving the output stays on-system.
+- **Why Context Engineering?** LLMs hallucinate UI unless constrained. An AI agent is like an enthusiastic junior designer with amnesia. You must provide a strict, machine-readable vocabulary (`CLAUDE.md`, Code Connect, Storybook) to force it to stay on-system.
+- **Figma MCP server:** Agents extract variables, components, and layout from your files.
+- The new senior skill: curating exactly what the agent knows, and proving the output stays on-system.
 
-**Resources** *(as of July 2026)*
-- Figma MCP server docs: https://developers.figma.com/docs/figma-mcp-server/
-- Code Connect docs + quickstart: https://developers.figma.com/docs/code-connect/
-- "The Figma Design Agent is Here" — Figma blog (May 2026): https://www.figma.com/blog/the-figma-agent-is-here/
-- "Workflow lab: Code to canvas" — Figma Help Center: https://help.figma.com/hc/en-us/articles/40219873508247-Workflow-lab-Code-to-canvas
-- "Agentic AI, Design Systems & Figma: A Practical Guide" — Christine Vallaure (Apr 2026): https://christinevallaure.substack.com/p/agentic-ai-design-systems-and-figma
-- "AI + Design Systems in 2026: The Workflow I Actually Use" (video): https://www.youtube.com/watch?v=XfezMs8B-O8
-- Into Design Systems — AI Design Systems Conference recordings: https://www.intodesignsystems.com
+**Resources**
+- Figma MCP server docs, Code Connect docs.
 
 **Drills**
-- Write component descriptions for your Figma Button (the MCP reads these — see how much better agent output gets).
 - Draft a `CLAUDE.md` for your system: token tiers, naming rules, component APIs, "never invent values" rule.
 
 **🏆 Boss: The A/B Agent Experiment**
-Wire Claude Code to the Figma remote MCP server. Add a Code Connect mapping for your Button. Then run the same prompt twice — "build a settings page for my app" — once **without** your CLAUDE.md/Code Connect, once **with**.
-- *Pass condition:* the "with-context" output passes the token audit (no invented hex/px, uses mapped components); the "without" output visibly doesn't.
-- *Verify:* grep audit on both outputs; save the diff.
-- *Portfolio:* the two outputs + diff + a screen recording of the on-system generation. **This is the demo that makes interviewers lean forward.**
+Wire Claude Code to the Figma remote MCP server. Add a Code Connect mapping. Run the same prompt twice — "build a settings page for my app" — once **without** your CLAUDE.md/Code Connect, once **with**.
+- *Pass condition:* The "with-context" output passes the token audit (no invented hex/px, uses mapped components); the "without" output visibly fails.
 
 ---
 
 ### 👑 Level 9 — Final Boss: Ship the System + Case Study
 *Rank: System Architect.*
 
-Assemble everything into the terminal artifact:
+Assemble everything into the terminal portfolio artifact:
 
-1. **The repo** — tokens.json, Style Dictionary build, components, deployed Storybook, governance docs, CLAUDE.md. A senior designer could clone it and run the system.
+1. **The repo** — tokens.json, GitHub Action build, Chromatic tests, components, deployed Storybook, governance docs, CLAUDE.md.
 2. **The Figma library** — published, variables + modes + documented components.
-3. **The case study** (<10 min read): the problem → architecture decisions (tiers, naming, modes) → the pipeline → governance → **the AI workflow, with your A/B evidence** → "what I'd do at 100× scale."
-4. **The demo** — 2-minute screen recording: change a token in Figma → watch it propagate to code → prompt an agent → get on-system UI.
+3. **The case study** (<10 min read): problem → architecture (tiers, modes, accessible math) → pipeline → governance → the AI workflow A/B evidence.
+4. **The demo** — 2-minute screen recording: change a token in Figma → watch CI/CD propagate to code → run Chromatic test → prompt an agent → get on-system UI.
 
-*Pass condition:* all four exist, cross-linked, and public-repo-ready. The app confers the rank and exports a summary page for your portfolio site.
-
----
-
-## 4. Interview translation cheat-sheet
-
-| You completed | You can say |
-|---|---|
-| Levels 1–2 | "I designed a three-tier, DTCG-aligned token architecture with Figma variables and light/dark modes." |
-| Level 3 | "I designed component APIs — variants, props, states — with full token binding, and I can defend the API tradeoffs." |
-| Level 4 | "I built the Figma → Style Dictionary → Tailwind pipeline; one token change propagates from design to production CSS." |
-| Level 5 | "I shipped the coded components with Storybook docs and design-code parity." |
-| Level 6 | "I treated the system as a product: adoption-oriented docs, validated by a zero-context stranger test." |
-| Level 7 | "I wrote the governance model — contribution, semver, deprecation — and executed a breaking change with a migration path." |
-| Level 8 | "I made the system agent-readable: Figma MCP + Code Connect + rules files, and I measured the difference in agent output quality with and without that context." |
-
----
-
-## 5. Side quests (optional, replayable, XP-only)
-
-- **Reverse-engineer a giant:** pull Polaris' or Carbon's public token JSON from GitHub; map their tiers against yours; steal three good ideas, document why.
-- **Density mode:** add comfortable/compact spacing modes to Level 2's collection.
-- **Second brand:** multi-brand theming via a brand mode — the classic enterprise interview topic.
-- **Contrast audit:** WCAG-check every semantic color pairing in both modes; fix failures *in tokens*.
-- **Alt toolchain:** try a DTCG-native alternative to Style Dictionary (e.g., Terrazzo) and write a comparison note.
-
-## 6. Staying current after the game ends
-
-- **People/orgs:** Nathan Curtis (EightShapes), Brad Frost, Jina Anne (coined "design tokens" at Salesforce), Tokens Studio, Romina Kavcic, Christine Vallaure
-- **Venues:** Into Design Systems conference + community, Figma Config talks, the DTCG GitHub discussions
-- **Habit:** re-run your Level 8 A/B experiment every few months as tooling changes — it's both your radar and an evergreen portfolio update.
-
-## 7. Suggested build order for the app itself (MVP discipline)
-
-1. Quest map + content files (Markdown/JSON) — no backend cleverness
-2. Quiz engine + XP/streaks
-3. Boss checkers for Levels 1 and 4 first (pure code, easiest to verify objectively)
-4. AI tutor chat with the no-artifacts guardrail
-5. Artifact vault + screenshot checklists (manual Figma verification)
-6. Only then: Figma-MCP-based verification, deployed Storybook checks, fancy stuff
-
-*The meta-rule, one more time: if building the app ever competes with doing the quests, the app loses. Vibecode the thinnest shell that makes you want to open it daily — then go do Level 0.*
+*Pass condition:* All four exist, cross-linked, and public-repo-ready. The app confers the rank and exports a summary page for your portfolio site.

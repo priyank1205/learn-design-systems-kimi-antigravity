@@ -10,6 +10,7 @@ import rehypeRaw from 'rehype-raw';
 import Link from 'next/link';
 import QuizEngine, { Question } from '@/components/QuizEngine';
 import BossChecker from '@/components/BossChecker';
+import InteractiveREPL from '@/components/InteractiveREPL';
 
 const DUMMY_QUESTIONS: Question[] = [
   {
@@ -26,37 +27,32 @@ const DUMMY_QUESTIONS: Question[] = [
 
 const renderers = {
   h2: ({node, ...props}: any) => {
-    const text = props.children?.[0] as string;
-    if (typeof text === 'string') {
-      const parts = text.split(' ');
-      if (parts[0].match(/^\d+$/)) {
-        return (
-          <h2 style={{ fontSize: '1.5rem', marginTop: '3rem', marginBottom: '1.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-            <span style={{ color: 'var(--accent-warning)', fontWeight: 700 }}>{parts[0]}</span>
-            <span>{parts.slice(1).join(' ')}</span>
-          </h2>
-        );
-      }
+    // Collect all text from children
+    const textChildren = Array.isArray(props.children) ? props.children : [props.children];
+    const fullText = textChildren.map((c: any) => typeof c === 'string' ? c : c?.props?.children).join('');
+    
+    if (fullText.trim().match(/^\d+\s/)) {
+      const firstSpaceIdx = fullText.indexOf(' ');
+      const numberPart = fullText.slice(0, firstSpaceIdx);
+      const textPart = fullText.slice(firstSpaceIdx + 1);
+      return (
+        <h2 style={{ fontSize: '1.75rem', marginTop: '3.5rem', marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <span style={{ color: 'var(--accent-warning)', fontWeight: 700 }}>{numberPart}</span>
+          <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{textPart}</span>
+        </h2>
+      );
     }
-    return <h2 style={{ fontSize: '1.5rem', marginTop: '3rem', marginBottom: '1.5rem' }} {...props} />;
+    return <h2 style={{ fontSize: '1.75rem', marginTop: '3.5rem', marginBottom: '1.5rem', color: 'var(--text-primary)', fontWeight: 600 }} {...props} />;
   },
   blockquote: ({node, ...props}: any) => (
-    <div style={{ padding: '1.5rem', background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.2)', borderRadius: 'var(--radius-md)', margin: '2rem 0', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
-      <Quote size={24} style={{ color: 'var(--accent-warning)', flexShrink: 0, marginTop: '0.1rem' }} />
-      <div style={{ color: 'rgba(255, 255, 255, 0.9)', fontStyle: 'italic', lineHeight: 1.6 }}>{props.children}</div>
+    <div style={{ padding: '1.5rem 0 1.5rem 1.5rem', borderLeft: '3px solid var(--accent-warning)', margin: '2.5rem 0', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+      <Quote size={20} style={{ color: 'var(--accent-warning)', flexShrink: 0, marginTop: '0.1rem' }} />
+      <div style={{ color: 'rgba(255, 255, 255, 0.85)', fontStyle: 'italic', lineHeight: 1.7, fontSize: '1.05rem' }}>{props.children}</div>
     </div>
   ),
-  p: ({node, ...props}: any) => <p style={{ marginBottom: '1.5rem', color: 'rgba(255, 255, 255, 0.8)' }} {...props} />
+  p: ({node, ...props}: any) => <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.75, letterSpacing: '0.01em' }} {...props} />,
+  strong: ({node, ...props}: any) => <strong style={{ color: 'var(--text-primary)', fontWeight: 600 }} {...props} />
 };
-
-// Dummy theory content for MVP - in reality this would be loaded from .md files
-const DUMMY_THEORY = `
-# A design system is cached decisions. 
-
-Every recurring UI question ("which blue? how much padding?") answered once and reused, instead of re-decided per screen.
-
-Decision math: *N* designers × *M* screens produce O(N·M) ad-hoc decisions; a system collapses that to O(N). Inconsistency isn't an aesthetic flaw — it's compounding maintenance cost and eroded user trust.
-`;
 
 export default function LevelPage() {
   const params = useParams();
@@ -101,46 +97,57 @@ export default function LevelPage() {
     }
   };
 
+  const handlePracticePass = () => {
+    if (!completedNodes[`${level.id}-practice`]) {
+      useGameStore.getState().markNodeCompleted(`${level.id}-practice`);
+      addXp(25);
+    }
+  };
+
   return (
     <div className="animate-fade-in" style={{ maxWidth: '900px', margin: '0 auto', paddingTop: '1rem' }}>
       <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
         <ArrowLeft size={16} /> Back to Map
       </Link>
 
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ fontSize: '0.875rem', color: 'var(--accent-primary)', fontWeight: '600', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Level {level.index}
+      <div style={{ marginBottom: '3rem' }}>
+        <div style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)', fontWeight: '500', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ color: 'var(--accent-warning)' }}>Level {level.index}</span>
+          <span style={{ color: 'var(--border-subtle)' }}>•</span>
+          <span>{level.rank}</span>
         </div>
-        <h1 style={{ fontSize: '2.5rem' }}>{level.title}</h1>
+        <h1 style={{ fontSize: '3.5rem', letterSpacing: '-0.03em', lineHeight: 1.1, color: 'var(--text-primary)' }}>{level.title}</h1>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-subtle)', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', gap: '2rem', borderBottom: '1px solid var(--border-subtle)', marginBottom: '3rem' }}>
         {(['learn', 'practice', 'boss'] as const).map(tab => (
           <button 
             key={tab}
             onClick={() => setActiveTab(tab)}
             style={{ 
-              padding: '0.75rem 1.5rem', 
-              color: activeTab === tab ? 'var(--accent-primary)' : 'var(--text-secondary)',
-              borderBottom: activeTab === tab ? '2px solid var(--accent-primary)' : '2px solid transparent',
-              fontWeight: activeTab === tab ? '600' : '500',
+              padding: '0 0 1rem 0', 
+              color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-secondary)',
+              borderBottom: activeTab === tab ? '2px solid var(--accent-warning)' : '2px solid transparent',
+              fontWeight: activeTab === tab ? '500' : '400',
               textTransform: 'capitalize',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              transition: 'all 0.2s ease',
+              marginBottom: '-1px'
             }}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
             {completedNodes[`${level.id}-${tab === 'learn' ? 'theory' : tab}`] && (
-              <CheckCircle2 size={16} color="var(--accent-success)" />
+              <CheckCircle2 size={14} color="var(--accent-success)" />
             )}
           </button>
         ))}
       </div>
 
       {/* Tab Content */}
-      <div className="glass-panel" style={{ padding: '2rem' }}>
+      <div style={{ paddingBottom: '4rem' }}>
         {activeTab === 'learn' && (
           <div className="animate-fade-in">
             <div className="prose" style={{ lineHeight: '1.7' }}>
@@ -187,29 +194,31 @@ export default function LevelPage() {
         {activeTab === 'practice' && (
           <div className="animate-fade-in">
             <h3>Practice Drills</h3>
-            <p>Complete the drills to unlock the boss.</p>
-            <div style={{ marginTop: '2rem', padding: '1rem', background: 'var(--bg-base)', borderRadius: 'var(--radius-md)' }}>
-              {!completedNodes[`${level.id}-practice`] ? (
-                <QuizEngine 
-                  questions={DUMMY_QUESTIONS}
-                  onPass={() => {
-                    useGameStore.getState().markNodeCompleted(`${level.id}-practice`);
-                    addXp(15);
-                  }}
-                  onFail={() => {
-                    // Do nothing on fail, let them retry
-                  }}
-                />
-              ) : (
-                <div style={{ textAlign: 'center', padding: '2rem' }}>
-                   <CheckCircle2 size={48} color="var(--accent-success)" style={{ margin: '0 auto 1rem' }} />
-                   <h3>Drills Completed!</h3>
-                   <button onClick={() => setActiveTab('boss')} className="primary-btn" style={{ marginTop: '1rem' }}>
-                     Proceed to Boss
-                   </button>
+            <p style={{ marginBottom: '2rem' }}>Complete the practice drills to unlock the boss.</p>
+            
+            {!completedNodes[`${level.id}-practice`] ? (
+              level.requiresRepl && level.replType ? (
+                <div className="animate-fade-in">
+                  <InteractiveREPL type={level.replType} onPass={handlePracticePass} />
                 </div>
-              )}
-            </div>
+              ) : (
+                <div style={{ padding: '1rem', background: 'var(--bg-base)', borderRadius: 'var(--radius-md)' }}>
+                  <QuizEngine 
+                    questions={DUMMY_QUESTIONS}
+                    onPass={handlePracticePass}
+                    onFail={() => {}}
+                  />
+                </div>
+              )
+            ) : (
+              <div style={{ textAlign: 'center', padding: '3rem', background: 'var(--bg-base)', borderRadius: 'var(--radius-md)' }}>
+                 <CheckCircle2 size={48} color="var(--accent-success)" style={{ margin: '0 auto 1rem' }} />
+                 <h3 style={{ color: 'var(--accent-success)' }}>Drills Completed!</h3>
+                 <button onClick={() => setActiveTab('boss')} className="primary-btn" style={{ marginTop: '1.5rem' }}>
+                   Proceed to Boss
+                 </button>
+              </div>
+            )}
           </div>
         )}
 
